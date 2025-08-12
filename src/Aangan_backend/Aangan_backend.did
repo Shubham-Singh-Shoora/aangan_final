@@ -128,6 +128,7 @@ service : {
     "get_my_properties" : () -> (PropertiesResult) query;
     "update_property_availability" : (nat64, bool) -> (PropertyResult);
     "update_property" : (nat64, text, text, text, nat64, nat64, PropertyType, nat32, nat32, nat32, vec text, vec text) -> (PropertyResult);
+    "delete_property" : (nat64) -> (Result);
 
     // Rental API
     "request_rental" : (nat64, nat64, nat64) -> (RentalResult);

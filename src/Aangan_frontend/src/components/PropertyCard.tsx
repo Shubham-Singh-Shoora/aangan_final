@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { MapPin, Home, Wifi, Car, Zap } from 'lucide-react';
 
 interface PropertyCardProps {
@@ -26,13 +27,47 @@ const PropertyCard = ({
   image,
   isNFTBacked = true
 }: PropertyCardProps) => {
+  const navigate = useNavigate();
+  
+  console.log('PropertyCard rendered with id:', id);
+  console.log('Navigate function available:', !!navigate);
+
+  const handleViewDetails = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Button clicked! Navigating to property:', id);
+    console.log('Current window location:', window.location.href);
+    try {
+      // Try React Router navigation first
+      navigate(`/property/${id}`);
+      console.log('Navigation attempted to:', `/property/${id}`);
+    } catch (error) {
+      console.error('React Router navigation failed:', error);
+      // Fallback to window navigation
+      console.log('Trying window navigation...');
+      window.location.href = `/property/${id}`;
+    }
+  };
+
+  // Alternative direct navigation function
+  const handleDirectNavigation = () => {
+    console.log('Direct navigation to:', `/property/${id}`);
+    window.location.href = `/property/${id}`;
+  };
+
   // Use the provided image or fallback to a placeholder
   const imageUrl = image && image !== 'placeholder'
     ? image
     : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&auto=format&fit=crop';
 
   return (
-    <Card className="card-futuristic bg-gradient-to-br from-white to-blue-50/30 border-blue-100 hover:border-blue-300 group">
+    <Card 
+      className="card-futuristic bg-gradient-to-br from-white to-blue-50/30 border-blue-100 hover:border-blue-300 group"
+      onClick={(e) => {
+        console.log('Card clicked, target:', e.target);
+        // Don't navigate if clicking on the card itself
+      }}
+    >
       <div className="aspect-[4/3] overflow-hidden rounded-t-xl">
         <img
           src={imageUrl}
@@ -84,12 +119,18 @@ const PropertyCard = ({
             <span className="text-gray-500 ml-1">/month</span>
           </div>
 
-          <Link
-            to={`/property/${id}`}
-            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-sm font-medium shadow-md hover:shadow-lg"
+          <Button
+            onClick={handleViewDetails}
+            type="button"
+            style={{ 
+              pointerEvents: 'auto', 
+              zIndex: 10,
+              position: 'relative'
+            }}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 text-sm font-medium shadow-md hover:shadow-lg cursor-pointer"
           >
             View Details
-          </Link>
+          </Button>
         </div>
       </CardContent>
     </Card>

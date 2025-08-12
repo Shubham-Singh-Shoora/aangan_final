@@ -143,3 +143,18 @@ pub fn update_property(
     property_store::update_property(property.clone())?;
     Ok(property)
 }
+
+#[update]
+pub fn delete_property(property_id: u64) -> Result<(), String> {
+    let caller = auth::require_authenticated()?;
+
+    let property = property_store::get_property(property_id)
+        .ok_or_else(|| "Property not found".to_string())?;
+
+    if property.owner != caller {
+        return Err("Only property owner can delete property".to_string());
+    }
+
+    property_store::delete_property(property_id)?;
+    Ok(())
+}

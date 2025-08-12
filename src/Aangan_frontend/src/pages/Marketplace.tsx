@@ -232,7 +232,7 @@ const Marketplace = () => {
             {filteredProperties.map((property) => (
               <PropertyCard
                 key={property.id}
-                id={property.id}
+                id={property.id.toString()}
                 title={property.title}
                 location={property.address}
                 rent={property.rent}

@@ -193,6 +193,20 @@ export class PropertyService {
             throw error;
         }
     }
+
+    async deleteProperty(id: number) {
+        try {
+            const result = await this.actor.delete_property(BigInt(id));
+            if ('Ok' in result) {
+                return true;
+            } else {
+                throw new Error(result.Err);
+            }
+        } catch (error) {
+            console.error('Error deleting property:', error);
+            throw error;
+        }
+    }
 }
 
 export const formatPropertyForDisplay = (property: Property) => {

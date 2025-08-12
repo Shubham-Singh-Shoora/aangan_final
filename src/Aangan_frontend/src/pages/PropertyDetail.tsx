@@ -19,7 +19,9 @@ import {
   MessageCircle,
   Zap,
   CheckCircle,
-  Eye
+  Eye,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { useICP } from '@/contexts/ICPContext';
@@ -29,31 +31,64 @@ import { toast } from 'sonner';
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { actor, user } = useICP();
+  const { actor, user, isAuthenticated } = useICP();
   const [isLiked, setIsLiked] = useState(false);
   const [property, setProperty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    fetchPropertyDetails();
-  }, [id, actor]);
+    console.log('PropertyDetail mounted with id:', id);
+    const fetchPropertyDetails = async () => {
+      if (!actor || !id) {
+        console.log('Missing actor or id:', { actor: !!actor, id });
+        return;
+      }
 
-  const fetchPropertyDetails = async () => {
-    if (!actor || !id) return;
+      try {
+        setLoading(true);
+        console.log('Fetching property with id:', id);
+        const propertyService = new PropertyService(actor);
+        const propertyData = await propertyService.getPropertyById(parseInt(id));
+        console.log('Property data received:', propertyData);
+        setProperty(propertyData);
+      } catch (error) {
+        console.error('Error fetching property:', error);
+        toast.error('Failed to load property details');
+        navigate('/marketplace');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPropertyDetails();
+  }, [id, actor, navigate]);
+
+  const handleDeleteProperty = async () => {
+    if (!actor || !property || !id) return;
+
+    const confirmDelete = window.confirm(
+      'Are you sure you want to delete this property? This action cannot be undone.'
+    );
+
+    if (!confirmDelete) return;
 
     try {
-      setLoading(true);
+      setIsDeleting(true);
       const propertyService = new PropertyService(actor);
-      const propertyData = await propertyService.getPropertyById(parseInt(id));
-      setProperty(propertyData);
+      await propertyService.deleteProperty(parseInt(id));
+      toast.success('Property deleted successfully');
+      navigate('/landlord-dashboard');
     } catch (error) {
-      console.error('Error fetching property:', error);
-      toast.error('Failed to load property details');
-      navigate('/marketplace');
+      console.error('Error deleting property:', error);
+      toast.error('Failed to delete property. Please try again.');
     } finally {
-      setLoading(false);
+      setIsDeleting(false);
     }
   };
+
+  // Check if current user is the property owner
+  const isPropertyOwner = user && property && user.toString() === property.owner;
 
   if (loading) {
     return (
@@ -363,6 +398,51 @@ const PropertyDetail = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Action Buttons */}
+            <div className="mt-6 space-y-4">
+              {isPropertyOwner ? (
+                // Owner Actions
+                <div className="flex gap-4">
+                  <Button 
+                    onClick={() => navigate(`/edit-property/${id}`)}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Property
+                  </Button>
+                  <Button 
+                    onClick={handleDeleteProperty}
+                    disabled={isDeleting}
+                    variant="destructive"
+                    className="flex-1"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    {isDeleting ? 'Deleting...' : 'Delete Property'}
+                  </Button>
+                </div>
+              ) : (
+                // Tenant Actions
+                <div className="space-y-3">
+                  <Button className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white">
+                    <Phone className="w-4 h-4 mr-2" />
+                    Contact Landlord
+                  </Button>
+                  <Button variant="outline" className="w-full">
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Request Rental
+                  </Button>
+                </div>
+              )}
+              
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/marketplace')}
+                className="w-full"
+              >
+                Back to Marketplace
+              </Button>
+            </div>
           </div>
         </div>
       </div>

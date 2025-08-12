@@ -56,3 +56,15 @@ pub fn get_available_properties() -> Vec<Property> {
             .collect()
     })
 }
+
+pub fn delete_property(id: u64) -> Result<(), String> {
+    PROPERTIES.with(|properties| {
+        let mut properties = properties.borrow_mut();
+        if properties.contains_key(&id) {
+            properties.remove(&id);
+            Ok(())
+        } else {
+            Err("Property not found".to_string())
+        }
+    })
+}
