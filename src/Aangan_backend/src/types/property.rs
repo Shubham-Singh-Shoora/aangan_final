@@ -86,7 +86,7 @@ impl Storable for Property {
     }
     
     const BOUND: ic_stable_structures::storable::Bound = ic_stable_structures::storable::Bound::Bounded {
-        max_size: 16384, // Increased to 16KB to accommodate compressed images
+        max_size: 1024 * 1024, // 1MB to accommodate large base64 images
         is_fixed_size: false,
     };
 }

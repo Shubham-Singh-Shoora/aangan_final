@@ -180,14 +180,6 @@ const AddProperty = () => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    // Validate file sizes before upload
-    const maxFileSize = 5 * 1024 * 1024; // 5MB
-    const oversizedFiles = Array.from(files).filter(file => file.size > maxFileSize);
-    if (oversizedFiles.length > 0) {
-      toast.error('Some files are too large. Please select images under 5MB.');
-      return;
-    }
-
     // Limit total number of images
     if (images.length + files.length > 5) {
       toast.error('Maximum 5 images allowed');
@@ -196,7 +188,7 @@ const AddProperty = () => {
 
     try {
       // Show upload progress
-      toast.info('Compressing and uploading images...');
+      toast.info('Uploading images...');
       
       const imageUrls = await imageUploadService.uploadMultipleImages(files);
       setImages(prev => [...prev, ...imageUrls].slice(0, 5));
@@ -209,7 +201,7 @@ const AddProperty = () => {
       }
     } catch (error) {
       console.error('Image upload failed:', error);
-      toast.error('Failed to upload images. Please try smaller images or try again.');
+      toast.error('Failed to upload images. Please try again.');
     }
   };
 
