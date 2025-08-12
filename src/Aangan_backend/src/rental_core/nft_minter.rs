@@ -1,0 +1,28 @@
+use crate::types::NFTMetadata;
+use candid::Principal;
+
+pub fn create_rental_nft(
+    nft_id: u64,
+    tenant: Principal,
+    property_id: u64,
+    rental_agreement_id: u64,
+    property_title: String,
+    property_address: String,
+    property_image: String,
+    rent_amount: u64,
+    start_date: u64,
+    end_date: u64,
+) -> NFTMetadata {
+    NFTMetadata::new(
+        nft_id,
+        tenant,
+        property_id,
+        rental_agreement_id,
+        property_title,
+        property_address,
+        property_image,
+        rent_amount,
+        start_date,
+        end_date,
+    )
+}

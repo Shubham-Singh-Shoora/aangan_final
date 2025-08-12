@@ -1,0 +1,143 @@
+type Role = variant {
+    Landlord;
+    Tenant
+};
+
+type User = record {
+    user_principal : principal;
+    role : Role;
+    name : opt text;
+    email : opt text;
+    phone : opt text;
+    created_at : nat64;
+    updated_at : nat64;
+};
+
+type PropertyType = variant {
+    Apartment;
+    House;
+    Villa;
+    Studio;
+    Condo;
+    Townhouse
+};
+
+type Property = record {
+    id : nat64;
+    owner : principal;
+    title : text;
+    description : text;
+    address : text;
+    rent_amount : nat64;
+    deposit_amount : nat64;
+    property_type : PropertyType;
+    bedrooms : nat32;
+    bathrooms : nat32;
+    area_sqft : nat32;
+    images : vec text;
+    amenities : vec text;
+    is_available : bool;
+    created_at : nat64;
+    updated_at : nat64;
+};
+
+type RentalStatus = variant {
+    Requested;
+    Confirmed;
+    Active;
+    Completed;
+    Cancelled
+};
+
+type RentalAgreement = record {
+    id : nat64;
+    property_id : nat64;
+    landlord : principal;
+    tenant : principal;
+    status : RentalStatus;
+    start_date : nat64;
+    end_date : nat64;
+    rent_amount : nat64;
+    deposit_amount : nat64;
+    nft_id : opt nat64;
+    created_at : nat64;
+    updated_at : nat64;
+};
+
+type NFTAttribute = record {
+    trait_type : text;
+    value : text
+};
+
+type NFTMetadata = record {
+    id : nat64;
+    owner : principal;
+    property_id : nat64;
+    rental_agreement_id : nat64;
+    name : text;
+    description : text;
+    image : text;
+    attributes : vec NFTAttribute;
+    created_at : nat64;
+};
+
+type Result = variant {
+    Ok;
+    Err : text
+};
+
+type UserResult = variant {
+    Ok : User;
+    Err : text
+};
+
+type PropertyResult = variant {
+    Ok : Property;
+    Err : text
+};
+
+type PropertiesResult = variant {
+    Ok : vec Property;
+    Err : text
+};
+
+type RentalResult = variant {
+    Ok : RentalAgreement;
+    Err : text
+};
+
+type NFTResult = variant {
+    Ok : NFTMetadata;
+    Err : text
+};
+
+service : {
+    // User API
+    "create_user" : (Role, opt text, opt text, opt text) -> (UserResult);
+    "get_user" : (opt principal) -> (UserResult) query;
+    "update_user_profile" : (opt text, opt text, opt text) -> (UserResult);
+    "get_all_users" : () -> (vec User) query;
+    "get_my_profile" : () -> (UserResult) query;
+
+    // Property API
+    "add_property" : (text, text, text, nat64, nat64, PropertyType, nat32, nat32, nat32, vec text, vec text) -> (PropertyResult);
+    "get_all_properties" : () -> (vec Property) query;
+    "get_available_properties" : () -> (vec Property) query;
+    "get_property_by_id" : (nat64) -> (PropertyResult) query;
+    "get_properties_by_landlord" : (opt principal) -> (vec Property) query;
+    "get_my_properties" : () -> (PropertiesResult) query;
+    "update_property_availability" : (nat64, bool) -> (PropertyResult);
+    "update_property" : (nat64, text, text, text, nat64, nat64, PropertyType, nat32, nat32, nat32, vec text, vec text) -> (PropertyResult);
+
+    // Rental API
+    "request_rental" : (nat64, nat64, nat64) -> (RentalResult);
+    "confirm_rental" : (nat64) -> (RentalResult);
+    "cancel_rental" : (nat64) -> (RentalResult);
+    "get_my_rentals" : () -> (vec RentalAgreement) query;
+    "get_rental_by_id" : (nat64) -> (RentalResult) query;
+
+    // NFT API
+    "get_my_nfts" : () -> (vec NFTMetadata) query;
+    "get_nft_by_id" : (nat64) -> (NFTResult) query;
+    "get_nft_metadata" : (nat64) -> (NFTResult) query;
+};
