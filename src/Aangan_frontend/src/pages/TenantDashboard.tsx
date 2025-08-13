@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useICP } from '@/contexts/ICPContext';
 import { PropertyService } from '@/services/PropertyService';
 import { RentalService } from '@/services/RentalService';
+import EscrowDisclaimerBanner from '@/components/EscrowPortal/EscrowDisclaimerBanner';
 import {
   Home,
   Clock,
@@ -278,6 +279,12 @@ const TenantDashboard = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Escrow Portal Disclaimer Banner */}
+        <EscrowDisclaimerBanner 
+          activeRentals={activeRentals}
+          onViewEscrow={() => window.location.href = '/escrow-portal'}
+        />
 
         {/* Overview Cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">

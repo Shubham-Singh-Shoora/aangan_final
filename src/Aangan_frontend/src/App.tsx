@@ -14,6 +14,7 @@ import LandlordDashboard from "./pages/LandlordDashboard";
 import AddProperty from "./pages/AddProperty";
 import RentalAgreement from "./pages/RentalAgreement";
 import Success from "./pages/Success";
+import EscrowPortal from "./pages/EscrowPortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,7 +25,7 @@ const App = () => (
       <ICPProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+        <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/marketplace" element={<Marketplace />} />
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/add-property" element={<AddProperty />} />
             <Route path="/edit-property/:id" element={<AddProperty />} />
             <Route path="/rental-agreement/:id" element={<RentalAgreement />} />
+            <Route path="/escrow-portal" element={<EscrowPortal />} />
             <Route path="/success" element={<Success />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

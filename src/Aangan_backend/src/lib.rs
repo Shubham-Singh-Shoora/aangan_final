@@ -9,6 +9,7 @@ mod types;
 // Re-export types for Candid interface
 pub use types::{
     NFTAttribute, NFTMetadata, Property, PropertyType, RentalAgreement, RentalStatus, Role, User,
+    EscrowAccount, EscrowStatus, EscrowTimelineEvent, EscrowEventType,
 };
 
 #[init]

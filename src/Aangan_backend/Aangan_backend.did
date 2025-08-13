@@ -84,6 +84,68 @@ type NFTMetadata = record {
     created_at : nat64;
 };
 
+type EscrowStatus = variant {
+    PendingSubmission;
+    UnderReview;
+    FundsSecured;
+    ActiveProtection;
+    RefundProcessing;
+    Completed;
+    Disputed;
+    Cancelled
+};
+
+type EscrowEventType = variant {
+    Created;
+    DepositSubmitted;
+    LandlordApproval;
+    FundsLocked;
+    LeaseActivated;
+    PropertyInspected;
+    RefundInitiated;
+    RefundCompleted;
+    DisputeRaised;
+    DisputeResolved;
+    Cancelled
+};
+
+type EscrowAccount = record {
+    id : nat64;
+    rental_id : nat64;
+    property_id : nat64;
+    landlord : principal;
+    tenant : principal;
+    amount : nat64;
+    status : EscrowStatus;
+    submission_deadline : nat64;
+    created_at : nat64;
+    updated_at : nat64;
+    smart_contract_address : opt text;
+    transaction_hash : opt text;
+    refund_amount : opt nat64;
+    dispute_reason : opt text;
+};
+
+type EscrowTimelineEvent = record {
+    id : nat64;
+    escrow_id : nat64;
+    event_type : EscrowEventType;
+    title : text;
+    description : text;
+    timestamp : nat64;
+    amount : opt nat64;
+    transaction_hash : opt text;
+    metadata : opt text;
+};
+
+type CreateEscrowRequest = record {
+    rental_id : nat64;
+    property_id : nat64;
+    landlord : principal;
+    tenant : principal;
+    amount : nat64;
+};
+
 type Result = variant {
     Ok;
     Err : text
@@ -116,6 +178,11 @@ type RentalsResult = variant {
 
 type NFTResult = variant {
     Ok : NFTMetadata;
+    Err : text
+};
+
+type EscrowResult = variant {
+    Ok : EscrowAccount;
     Err : text
 };
 
@@ -156,4 +223,18 @@ service : {
     "get_my_nfts" : () -> (vec NFTMetadata) query;
     "get_nft_by_id" : (nat64) -> (NFTResult) query;
     "get_nft_metadata" : (nat64) -> (NFTResult) query;
+
+    // Escrow API
+    "get_escrow_accounts_for_user" : (principal) -> (vec EscrowAccount) query;
+    "get_escrow_accounts_by_landlord" : (principal) -> (vec EscrowAccount) query;
+    "get_escrow_accounts_by_tenant" : (principal) -> (vec EscrowAccount) query;
+    "get_escrow_account_by_id" : (nat64) -> (opt EscrowAccount) query;
+    "get_escrow_timeline_events" : (nat64) -> (vec EscrowTimelineEvent) query;
+    "get_user_escrow_statistics" : (principal) -> (nat64, nat64, nat64, nat64, nat64) query;
+    "create_escrow_account" : (CreateEscrowRequest) -> (EscrowResult);
+    "submit_security_deposit" : (nat64, text) -> (EscrowResult);
+    "approve_security_deposit" : (nat64, text) -> (EscrowResult);
+    "activate_escrow_protection" : (nat64) -> (EscrowResult);
+    "initiate_refund" : (nat64, nat64) -> (EscrowResult);
+    "complete_refund" : (nat64, text) -> (EscrowResult);
 };

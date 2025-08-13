@@ -8,6 +8,7 @@ use crate::types::*;
 pub mod property_store;
 pub mod rental_store;
 pub mod user_store;
+pub mod escrow_store;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -40,9 +41,23 @@ thread_local! {
         )
     );
 
+    static ESCROW_ACCOUNTS: RefCell<StableBTreeMap<u64, crate::types::EscrowAccount, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(4))),
+        )
+    );
+
+    static ESCROW_TIMELINE_EVENTS: RefCell<StableBTreeMap<u64, crate::types::EscrowTimelineEvent, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(5))),
+        )
+    );
+
     static PROPERTY_COUNTER: RefCell<u64> = RefCell::new(0);
     static RENTAL_COUNTER: RefCell<u64> = RefCell::new(0);
     static NFT_COUNTER: RefCell<u64> = RefCell::new(0);
+    static ESCROW_COUNTER: RefCell<u64> = RefCell::new(0);
+    static ESCROW_EVENT_COUNTER: RefCell<u64> = RefCell::new(0);
 }
 
 pub fn init_storage() {
@@ -54,6 +69,12 @@ pub fn init_storage() {
         *counter.borrow_mut() = 0;
     });
     NFT_COUNTER.with(|counter| {
+        *counter.borrow_mut() = 0;
+    });
+    ESCROW_COUNTER.with(|counter| {
+        *counter.borrow_mut() = 0;
+    });
+    ESCROW_EVENT_COUNTER.with(|counter| {
         *counter.borrow_mut() = 0;
     });
 }
@@ -84,6 +105,22 @@ pub fn get_next_rental_id() -> u64 {
 
 pub fn get_next_nft_id() -> u64 {
     NFT_COUNTER.with(|counter| {
+        let mut counter = counter.borrow_mut();
+        *counter += 1;
+        *counter
+    })
+}
+
+pub fn get_next_escrow_id() -> u64 {
+    ESCROW_COUNTER.with(|counter| {
+        let mut counter = counter.borrow_mut();
+        *counter += 1;
+        *counter
+    })
+}
+
+pub fn get_next_escrow_event_id() -> u64 {
+    ESCROW_EVENT_COUNTER.with(|counter| {
         let mut counter = counter.borrow_mut();
         *counter += 1;
         *counter

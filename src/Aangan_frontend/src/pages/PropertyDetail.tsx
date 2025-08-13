@@ -38,6 +38,7 @@ const PropertyDetail = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRequestingRental, setIsRequestingRental] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [hasActiveRental, setHasActiveRental] = useState(false);
 
   useEffect(() => {
     console.log('PropertyDetail mounted with id:', id);
@@ -60,9 +61,23 @@ const PropertyDetail = () => {
         setLoading(true);
         console.log('Fetching property with id:', propertyId);
         const propertyService = new PropertyService(actor);
+        const rentalService = new RentalService(actor);
+        
+        // Fetch property data
         const propertyData = await propertyService.getPropertyById(propertyId);
         console.log('Property data received:', propertyData);
         setProperty(propertyData);
+        
+        // Check if property has active rental
+        try {
+          const myRentals = await rentalService.getMyRentals();
+          const hasActive = myRentals.some(rental => Number(rental.property_id) === propertyId);
+          setHasActiveRental(hasActive);
+          console.log('Active rental found:', hasActive);
+        } catch (rentalError) {
+          console.log('Error checking rental status:', rentalError);
+          // Don't fail the whole component if rental check fails
+        }
       } catch (error) {
         console.error('Error fetching property:', error);
         toast.error('Failed to load property details');
@@ -101,6 +116,12 @@ const PropertyDetail = () => {
   const handleRequestRental = async () => {
     if (!actor || !property || !id || !user) return;
 
+    // Check property availability before making request
+    if (!property.is_available || hasActiveRental) {
+      toast.error('This property is currently not available for rent or already has an active rental.');
+      return;
+    }
+
     try {
       setIsRequestingRental(true);
       const rentalService = new RentalService(actor);
@@ -116,7 +137,21 @@ const PropertyDetail = () => {
       navigate('/tenant-dashboard');
     } catch (error) {
       console.error('Error requesting rental:', error);
-      toast.error('Failed to submit rental request. Please try again.');
+      
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.message.includes('already has an active rental')) {
+          toast.error('This property already has an active rental. Please check other available properties.');
+        } else if (error.message.includes('not available')) {
+          toast.error('This property is currently not available for rent.');
+        } else if (error.message.includes('Authentication')) {
+          toast.error('Please log in to request a rental.');
+        } else {
+          toast.error(`Failed to submit rental request: ${error.message}`);
+        }
+      } else {
+        toast.error('Failed to submit rental request. Please try again.');
+      }
     } finally {
       setIsRequestingRental(false);
     }
@@ -458,13 +493,30 @@ const PropertyDetail = () => {
                     variant="outline" 
                     className="w-full"
                     onClick={handleRequestRental}
-                    disabled={isRequestingRental}
+                    disabled={isRequestingRental || !property?.is_available || hasActiveRental}
                   >
                     <MessageCircle className="w-4 h-4 mr-2" />
-                    {isRequestingRental ? 'Submitting Request...' : 'Request Rental'}
+                    {hasActiveRental ? 'Property Already Rented' :
+                     !property?.is_available ? 'Property Not Available' : 
+                     isRequestingRental ? 'Submitting Request...' : 'Request Rental'}
                   </Button>
                 </div>
               )}
+              
+              {/* Show availability status */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className={`w-3 h-3 rounded-full ${
+                  hasActiveRental ? 'bg-orange-500' : 
+                  property?.is_available ? 'bg-green-500' : 'bg-red-500'
+                }`}></div>
+                <span className={`text-sm font-medium ${
+                  hasActiveRental ? 'text-orange-700' :
+                  property?.is_available ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  {hasActiveRental ? 'Currently Rented' :
+                   property?.is_available ? 'Available for Rent' : 'Currently Unavailable'}
+                </span>
+              </div>
               
               <Button 
                 variant="outline" 

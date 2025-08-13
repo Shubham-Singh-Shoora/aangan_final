@@ -26,7 +26,9 @@ import {
   Mail,
   Phone,
   Settings,
-  FileText
+  FileText,
+  Shield,
+  Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -392,6 +394,75 @@ const LandlordDashboard = () => {
               </CardContent>
             </Card>
           )}
+        </div>
+
+        {/* Escrow Management Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              Escrow Management
+            </h2>
+            <Button 
+              onClick={() => window.location.href = '/escrow-portal'}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              View Escrow Portal
+            </Button>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card className="card-futuristic border-green-200 bg-gradient-to-br from-green-50/80 to-white">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-600 font-medium mb-1 text-sm">Total Escrow Protected</p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      ₹{(rentedProperties.length * 50000).toLocaleString('en-IN')}
+                    </p>
+                    <p className="text-xs text-green-500 mt-1">Security deposits</p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                    <Shield className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="card-futuristic border-blue-200 bg-gradient-to-br from-blue-50/80 to-white">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-600 font-medium mb-1 text-sm">Pending Deposits</p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      {Math.floor(Math.random() * 3)}
+                    </p>
+                    <p className="text-xs text-blue-500 mt-1">Awaiting submission</p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="card-futuristic border-yellow-200 bg-gradient-to-br from-yellow-50/80 to-white">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-yellow-600 font-medium mb-1 text-sm">Return Processing</p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      {Math.floor(Math.random() * 2)}
+                    </p>
+                    <p className="text-xs text-yellow-500 mt-1">In progress</p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center">
+                    <IndianRupee className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Properties List */}
