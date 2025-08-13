@@ -1,156 +1,113 @@
 # Aangan
 
-Aangan is a decentralized web application built on the Internet Computer (IC) platform using the DFINITY SDK. It integrates secure backend canisters written in Motoko or Rust with a modern frontend framework to provide a scalable, fast, and secure decentralized app experience.
+Aangan is a decentralized rental platform for tenants and landlords, built on the Internet Computer (ICP) blockchain.  
+It combines the frontend and backend in one ICP deployment, uses Internet Identity for secure authentication,  
+NFTs for active rental contracts, and (soon) an escrow system to prevent security deposit fraud.
 
 ---
 
-## Overview
+## Branch Overview
 
-This project supports multiple branches, each potentially representing different features, fixes, or versions of the application in development. Branches allow development work to proceed in isolation without affecting the main or production version until changes are ready to be merged.
+- **master**  
+  Base branch with core setup. Not fully active—more like the project’s skeleton.
 
----
+- **Property Listing**  
+  Implements property listing functionality as the name suggests.
 
-## Branches in this Repository
+- **MarketPlace** *(most complete)*  
+  - Plug wallet integration  
+  - NFT minting for active rentals  
+  - Property listing system  
+  - Rental agreements  
+  This is the most functional branch to date.
 
-Branches in this repository serve to organize development and collaborative efforts. Here is an overview of typical branch types you may encounter or create:
-
-### How to View Branches
-
-You can see all branches of this repository on GitHub by:
-
-1. Navigating to the repository main page.
-2. Clicking the branch dropdown near the top-left file navigation bar.
-3. Selecting **View all branches** to see a full list of branches including active and stale ones.
-
-This helps contributors choose the correct branch to work on or review.
-
----
-
-## Features
-
-- Fully decentralized backend on Internet Computer using canisters
-- Responsive frontend with seamless integration
-- Secure identity and authentication with Internet Identity
-- Scalable design supporting multiple concurrent users
-- Modular branch-based development workflow
+- **Escrow Contract** *(planned)*  
+  Will be integrated into MarketPlace to handle deposits through an escrow mechanism.  
+  Currently not functional.
 
 ---
 
-## Getting Started
-### Clone the Repository
+## Core Features
 
-git clone https://github.com/Shubham-Singh-Shoora/aangan_final.git
-cd aangan_final
+- **ICP Blockchain Hosting**  
+  Frontend and backend deployed together on ICP using DFINITY SDK.
 
-### List All Branches Available
+- **Internet Identity Authentication**  
+  Decentralized, secure user verification.
 
+- **NFT-backed Rental Agreements**  
+  Every active rental is represented by a minted NFT for transparency and proof of contract.
+
+- **Escrow Mechanism (Upcoming)**  
+  Will safeguard deposits until contractual terms are met.
+
+---
+
+## Getting Started (Local Development)
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/Shubham-Singh-Shoora/Aangan_Platform
+Check available branches
+bash
+Copy
+Edit
 git branch -a
+3. Switch to your desired branch
+bash
+Copy
+Edit
+git checkout <branch-name>
+4. Install prerequisites
+DFX SDK
 
-This command lists both local and remote branches so you can switch to the desired branch for development or review.
+Node.js (LTS) with npm or yarn
 
-### Switch to a Branch
+Rust (if any canisters use Rust alongside Motoko)
 
-git checkout <branch_name>
-
-
-Replace `<branch_name>` with the name of the branch you want to work on.
-
----
-
-## Installation
-
-- Install [DFX SDK](https://internetcomputer.org/docs/current/references/cli-reference/dfx-parent)
-- Install [Node.js](https://nodejs.org/) LTS and npm or yarn
-- Install Rust (if using Rust canisters)
-
----
-
-## Running Locally
-
-1. Start local replica:
-
+5. Run locally
+bash
+Copy
+Edit
 dfx start --background
-
-2. Deploy canisters:
-
 dfx deploy
-
-3. Install frontend deps and run frontend server:
-
 cd frontend
 npm install
 npm start
+Then open http://localhost:5173 in your browser.
 
-The app will be available locally at `http://localhost:5173`.
+Deploying to ICP Mainnet
+Prerequisites
+Funded cycles wallet
 
----
+Correct dfx.json configuration for --network ic
 
-## Project Structure
-
-aangan_final/
-├── src/ # Backend canister source code
-│ ├── aangan_backend/ # Main backend logic (Motoko/Rust)
-│ └── ...
-├── frontend/ # Frontend React/Vite app
-├── dfx.json # IC project config
-├── package.json # NPM package dependencies
-└── README.md # This documentation
-
-
----
-
-## Deploying to the Internet Computer Mainnet
-
-Make sure your cycles wallet is funded and `dfx.json` is configured correctly. Then deploy:
-
+Command
+bash
+Copy
+Edit
 dfx deploy --network ic
+Roadmap
+ Complete and integrate Escrow Contract into MarketPlace
 
+ Enhance security and user experience
 
----
+ Merge all stable features into master
 
-## Useful Git Commands for Branch Management
+ Improve deployment scripts for smoother mainnet launches
 
-| Command                    | Description                              |
-|----------------------------|----------------------------------------|
-| `git branch -a`            | List all local and remote branches     |
-| `git checkout <branch>`    | Switch to specified branch              |
-| `git pull`                 | Update current branch with remote changes |
-| `git merge <branch>`       | Merge specified branch into current branch |
-| `git push origin <branch>` | Push local branch changes to remote    |
-
----
-
-## Environment Variables
-
-| Variable Name            | Description                              |
-|--------------------------|------------------------------------------|
-| `DFX_NETWORK`            | Target network, eg. `local` or `ic`      |
-| `REACT_APP_CANISTER_ID`  | Frontend canister ID for backend calls   |
-| `REACT_APP_II_URL`       | Internet Identity server URL              |
-
----
-
-## Resources
-
-- [Internet Computer Docs](https://internetcomputer.org/docs/)
-- [Motoko Language Reference](https://internetcomputer.org/docs/current/references/motoko-ref)
-- [Rust Canister Development](https://internetcomputer.org/docs/current/references/rust-ref)
-- [GitHub Branch Management](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/viewing-branches-in-your-repository)
-
----
-
-## License
-
-This project is licensed under the MIT License.
-
----
-
-## Author
-
-**Shubham Singh Shoora**  
-GitHub: [Shubham-Singh-Shoora](https://github.com/Shubham-Singh-Shoora)
-
-
+Project Structure
+bash
+Copy
+Edit
+/
+├── src/                 # Backend canisters (Motoko/Rust)
+├── frontend/            # Frontend application (React/Vite or similar)
+├── dfx.json             # DFINITY project configuration
+├── deploy-mainnet.sh    # Helper script for deployment
+└── README.md            # Project documentation
+License
+MIT License
 
 
 
