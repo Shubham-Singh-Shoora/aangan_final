@@ -105,23 +105,98 @@ export class RentalService {
             throw error;
         }
     }
+
+    async getPendingRentalRequests() {
+        try {
+            const result = await this.actor.get_pending_rental_requests();
+            if ('Ok' in result) {
+                return result.Ok.map(formatRentalForDisplay);
+            } else {
+                throw new Error(result.Err);
+            }
+        } catch (error) {
+            console.error('Error fetching pending rental requests:', error);
+            throw error;
+        }
+    }
+
+    async getApprovedRentals() {
+        try {
+            const result = await this.actor.get_approved_rentals();
+            if ('Ok' in result) {
+                return result.Ok.map(formatRentalForDisplay);
+            } else {
+                throw new Error(result.Err);
+            }
+        } catch (error) {
+            console.error('Error fetching approved rentals:', error);
+            throw error;
+        }
+    }
+
+    async approveRentalRequest(rentalId: number) {
+        try {
+            const result = await this.actor.approve_rental_request(BigInt(rentalId));
+            if ('Ok' in result) {
+                return result.Ok;
+            } else {
+                throw new Error(result.Err);
+            }
+        } catch (error) {
+            console.error('Error approving rental request:', error);
+            throw error;
+        }
+    }
+
+    async rejectRentalRequest(rentalId: number) {
+        try {
+            const result = await this.actor.reject_rental_request(BigInt(rentalId));
+            if ('Ok' in result) {
+                return result.Ok;
+            } else {
+                throw new Error(result.Err);
+            }
+        } catch (error) {
+            console.error('Error rejecting rental request:', error);
+            throw error;
+        }
+    }
+
+    async markRentalUnderReview(rentalId: number) {
+        try {
+            const result = await this.actor.mark_rental_under_review(BigInt(rentalId));
+            if ('Ok' in result) {
+                return result.Ok;
+            } else {
+                throw new Error(result.Err);
+            }
+        } catch (error) {
+            console.error('Error marking rental under review:', error);
+            throw error;
+        }
+    }
 }
 
 export const formatRentalForDisplay = (rental: any) => {
     const statusMap = {
         'Requested': 'Requested',
+        'UnderReview': 'Under Review',
+        'Approved': 'Approved', 
         'Confirmed': 'Confirmed',
         'Active': 'Active',
         'Completed': 'Completed',
+        'Rejected': 'Rejected',
         'Cancelled': 'Cancelled'
     };
 
+    const statusKey = Object.keys(rental.status)[0];
     return {
         id: rental.id.toString(),
         propertyId: rental.property_id.toString(),
         landlord: rental.landlord.toString(),
         tenant: rental.tenant.toString(),
-        status: Object.keys(rental.status)[0],
+        status: statusMap[statusKey as keyof typeof statusMap] || statusKey,
+        rawStatus: statusKey,
         startDate: new Date(Number(rental.start_date) / 1000000),
         endDate: new Date(Number(rental.end_date) / 1000000),
         rentAmount: Number(rental.rent_amount),

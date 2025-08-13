@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useICP } from '@/contexts/ICPContext';
 import { PropertyService } from '@/services/PropertyService';
+import { RentalService } from '@/services/RentalService';
+import RentalRequestCard from '@/components/RentalRequestCard';
 import {
   Home,
   User,
@@ -23,14 +25,17 @@ import {
   X,
   Mail,
   Phone,
-  Settings
+  Settings,
+  FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const LandlordDashboard = () => {
   const { user, actor, updateProfile } = useICP();
   const [properties, setProperties] = useState<any[]>([]);
+  const [rentalRequests, setRentalRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [requestsLoading, setRequestsLoading] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
@@ -41,6 +46,7 @@ const LandlordDashboard = () => {
   useEffect(() => {
     if (actor) {
       fetchLandlordProperties();
+      fetchRentalRequests();
     }
   }, [actor]);
 
@@ -58,6 +64,70 @@ const LandlordDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchRentalRequests = async () => {
+    if (!actor) return;
+
+    try {
+      setRequestsLoading(true);
+      const rentalService = new RentalService(actor);
+      const requests = await rentalService.getPendingRentalRequests();
+      setRentalRequests(requests);
+    } catch (error) {
+      console.error('Error fetching rental requests:', error);
+      // Don't show error toast for rental requests as the methods might not exist yet
+    } finally {
+      setRequestsLoading(false);
+    }
+  };
+
+  const handleApproveRequest = async (requestId: string) => {
+    if (!actor) return;
+
+    try {
+      const rentalService = new RentalService(actor);
+      await rentalService.approveRentalRequest(parseInt(requestId));
+      toast.success('Rental request approved successfully!');
+      fetchRentalRequests(); // Refresh the list
+    } catch (error) {
+      console.error('Error approving request:', error);
+      toast.error('Failed to approve request. Please try again.');
+    }
+  };
+
+  const handleRejectRequest = async (requestId: string) => {
+    if (!actor) return;
+
+    try {
+      const rentalService = new RentalService(actor);
+      await rentalService.rejectRentalRequest(parseInt(requestId));
+      toast.success('Rental request rejected.');
+      fetchRentalRequests(); // Refresh the list
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+      toast.error('Failed to reject request. Please try again.');
+    }
+  };
+
+  const handleMarkUnderReview = async (requestId: string) => {
+    if (!actor) return;
+
+    try {
+      const rentalService = new RentalService(actor);
+      await rentalService.markRentalUnderReview(parseInt(requestId));
+      toast.success('Request marked as under review.');
+      fetchRentalRequests(); // Refresh the list
+    } catch (error) {
+      console.error('Error marking request under review:', error);
+      toast.error('Failed to update request status. Please try again.');
+    }
+  };
+
+  const handleViewTenant = (tenantId: string) => {
+    // For now, just show a toast with tenant ID
+    // In a full implementation, this would open a tenant profile modal
+    toast.info(`Viewing tenant profile: ${tenantId.slice(0, 10)}...`);
   };
 
   const handleProfileUpdate = async () => {
@@ -275,6 +345,53 @@ const LandlordDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Rental Requests Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">
+              Rental Requests
+            </h2>
+            <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+              <FileText className="w-4 h-4 mr-1" />
+              {rentalRequests.length} Pending
+            </Badge>
+          </div>
+
+          {requestsLoading ? (
+            <Card className="card-futuristic border-purple-200 text-center py-12">
+              <CardContent>
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 pulse-glow">
+                  <FileText className="w-8 h-8 text-white animate-pulse" />
+                </div>
+                <p className="text-gray-600 text-lg">Loading rental requests...</p>
+              </CardContent>
+            </Card>
+          ) : rentalRequests.length > 0 ? (
+            <div className="space-y-4">
+              {rentalRequests.map((request) => (
+                <RentalRequestCard
+                  key={request.id}
+                  request={request}
+                  onApprove={handleApproveRequest}
+                  onReject={handleRejectRequest}
+                  onMarkUnderReview={handleMarkUnderReview}
+                  onViewTenant={handleViewTenant}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card className="card-futuristic border-purple-200 text-center py-12 bg-gradient-to-br from-purple-50/50 to-white">
+              <CardContent>
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-100 to-purple-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-8 h-8 text-purple-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">No Rental Requests</h3>
+                <p className="text-gray-600">New rental requests from tenants will appear here for your review.</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Properties List */}

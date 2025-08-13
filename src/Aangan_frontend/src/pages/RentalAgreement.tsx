@@ -22,10 +22,12 @@ const RentalAgreement = () => {
   const [agreed, setAgreed] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
   const [property, setProperty] = useState<any>(null);
+  const [approvedRental, setApprovedRental] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchPropertyDetails();
+    checkApprovedRental();
   }, [id, actor]);
 
   const fetchPropertyDetails = async () => {
@@ -42,6 +44,28 @@ const RentalAgreement = () => {
       navigate('/marketplace');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkApprovedRental = async () => {
+    if (!actor || !id) return;
+
+    try {
+      const rentalService = new RentalService(actor);
+      const approvedRentals = await rentalService.getApprovedRentals();
+      
+      // Check if there's an approved rental for this property
+      const rental = approvedRentals.find((r: any) => r.property_id === parseInt(id));
+      
+      if (rental) {
+        setApprovedRental(rental);
+      } else {
+        toast.error('No approved rental found for this property. Please get landlord approval first.');
+        navigate('/tenant-dashboard');
+      }
+    } catch (error) {
+      console.error('Error checking approved rental:', error);
+      // Allow to proceed if service is not available yet
     }
   };
 
@@ -84,10 +108,10 @@ const RentalAgreement = () => {
     propertyAddress: property.address,
     landlordName: 'Property Owner', // This should come from landlord's profile
     tenantName: user?.name || 'Current User',
-    monthlyRent: Number(property.rent_amount),
-    securityDeposit: Number(property.deposit_amount),
-    leaseStartDate: new Date().toISOString().split('T')[0],
-    leaseEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year from now
+    monthlyRent: approvedRental ? Number(approvedRental.rent_amount) : Number(property.rent_amount),
+    securityDeposit: approvedRental ? Number(approvedRental.deposit_amount) : Number(property.deposit_amount),
+    leaseStartDate: approvedRental ? new Date(Number(approvedRental.start_date) / 1000000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    leaseEndDate: approvedRental ? new Date(Number(approvedRental.end_date) / 1000000).toISOString().split('T')[0] : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     agreementDate: new Date().toISOString().split('T')[0]
   };
 
@@ -97,8 +121,8 @@ const RentalAgreement = () => {
       return;
     }
 
-    if (!actor || !property || !user) {
-      toast.error('Please ensure you are logged in and try again');
+    if (!actor || !property || !user || !approvedRental) {
+      toast.error('Please ensure you are logged in and have an approved rental');
       return;
     }
 
@@ -107,15 +131,8 @@ const RentalAgreement = () => {
     try {
       const rentalService = new RentalService(actor);
 
-      // Create rental request
-      const startDate = new Date(agreementData.leaseStartDate).getTime() * 1000000; // Convert to nanoseconds
-      const endDate = new Date(agreementData.leaseEndDate).getTime() * 1000000;
-
-      const rental = await rentalService.requestRental(
-        property.id,
-        startDate,
-        endDate
-      );
+      // Confirm the approved rental (this will mint the NFT)
+      const rental = await rentalService.confirmRental(approvedRental.id);
 
       toast.success('Rental agreement created successfully!');
       navigate('/success', {

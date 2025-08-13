@@ -43,9 +43,12 @@ type Property = record {
 
 type RentalStatus = variant {
     Requested;
+    UnderReview;
+    Approved;
     Confirmed;
     Active;
     Completed;
+    Rejected;
     Cancelled
 };
 
@@ -106,6 +109,11 @@ type RentalResult = variant {
     Err : text
 };
 
+type RentalsResult = variant {
+    Ok : vec RentalAgreement;
+    Err : text
+};
+
 type NFTResult = variant {
     Ok : NFTMetadata;
     Err : text
@@ -136,6 +144,13 @@ service : {
     "cancel_rental" : (nat64) -> (RentalResult);
     "get_my_rentals" : () -> (vec RentalAgreement) query;
     "get_rental_by_id" : (nat64) -> (RentalResult) query;
+    
+    // New Approval API Methods
+    "get_pending_rental_requests" : () -> (RentalsResult) query;
+    "get_approved_rentals" : () -> (RentalsResult) query;
+    "approve_rental_request" : (nat64) -> (RentalResult);
+    "reject_rental_request" : (nat64) -> (RentalResult);
+    "mark_rental_under_review" : (nat64) -> (RentalResult);
 
     // NFT API
     "get_my_nfts" : () -> (vec NFTMetadata) query;

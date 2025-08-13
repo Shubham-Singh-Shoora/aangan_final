@@ -26,16 +26,18 @@ import {
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { useICP } from '@/contexts/ICPContext';
 import { PropertyService } from '@/services/PropertyService';
+import { RentalService } from '@/services/RentalService';
 import { toast } from 'sonner';
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { actor, user, isAuthenticated } = useICP();
-  const [isLiked, setIsLiked] = useState(false);
+  const { user, actor } = useICP();
   const [property, setProperty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRequestingRental, setIsRequestingRental] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
 
   useEffect(() => {
     console.log('PropertyDetail mounted with id:', id);
@@ -84,6 +86,30 @@ const PropertyDetail = () => {
       toast.error('Failed to delete property. Please try again.');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleRequestRental = async () => {
+    if (!actor || !property || !id || !user) return;
+
+    try {
+      setIsRequestingRental(true);
+      const rentalService = new RentalService(actor);
+      
+      // Set default rental period (30 days from now)
+      const startDate = Date.now() * 1000000; // Convert to nanoseconds
+      const endDate = (Date.now() + (30 * 24 * 60 * 60 * 1000)) * 1000000; // 30 days later in nanoseconds
+      
+      await rentalService.requestRental(parseInt(id), startDate, endDate);
+      toast.success('Rental request submitted successfully! The landlord will review your request.');
+      
+      // Optionally redirect to tenant dashboard to view pending requests
+      navigate('/tenant-dashboard');
+    } catch (error) {
+      console.error('Error requesting rental:', error);
+      toast.error('Failed to submit rental request. Please try again.');
+    } finally {
+      setIsRequestingRental(false);
     }
   };
 
@@ -159,15 +185,6 @@ const PropertyDetail = () => {
   };
 
   const displayProperty = formatPropertyForDisplay(property);
-
-  const handleRentNow = () => {
-    if (!user) {
-      toast.error('Please log in to rent this property');
-      navigate('/login');
-      return;
-    }
-    navigate(`/rental-agreement/${id}`, { state: { propertyId: id, property: displayProperty } });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-cyan-50/20 relative">
@@ -323,11 +340,11 @@ const PropertyDetail = () => {
                 </div>
 
                 <Button
-                  onClick={handleRentNow}
+                  onClick={handleRequestRental}
                   className="btn-futuristic w-full mb-4 text-lg py-3"
                 >
                   <Zap className="w-5 h-5 mr-2" />
-                  Rent Now
+                  Request to Rent
                 </Button>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -428,9 +445,14 @@ const PropertyDetail = () => {
                     <Phone className="w-4 h-4 mr-2" />
                     Contact Landlord
                   </Button>
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={handleRequestRental}
+                    disabled={isRequestingRental}
+                  >
                     <MessageCircle className="w-4 h-4 mr-2" />
-                    Request Rental
+                    {isRequestingRental ? 'Submitting Request...' : 'Request Rental'}
                   </Button>
                 </div>
               )}

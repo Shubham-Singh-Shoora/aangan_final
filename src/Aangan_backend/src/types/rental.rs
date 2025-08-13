@@ -21,11 +21,14 @@ pub struct RentalAgreement {
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum RentalStatus {
-    Requested,
-    Confirmed,
-    Active,
-    Completed,
-    Cancelled,
+    Requested,      // Tenant submitted request (Pending landlord approval)
+    UnderReview,    // Landlord is reviewing the request
+    Approved,       // Landlord approved, tenant can proceed to agreement
+    Confirmed,      // Agreement signed and NFT minted
+    Active,         // Rental is active
+    Completed,      // Rental completed
+    Rejected,       // Landlord rejected the request
+    Cancelled,      // Either party cancelled
 }
 
 impl RentalAgreement {
@@ -59,6 +62,21 @@ impl RentalAgreement {
     pub fn confirm(&mut self, nft_id: u64) {
         self.status = RentalStatus::Confirmed;
         self.nft_id = Some(nft_id);
+        self.updated_at = ic_cdk::api::time();
+    }
+
+    pub fn approve(&mut self) {
+        self.status = RentalStatus::Approved;
+        self.updated_at = ic_cdk::api::time();
+    }
+
+    pub fn reject(&mut self) {
+        self.status = RentalStatus::Rejected;
+        self.updated_at = ic_cdk::api::time();
+    }
+
+    pub fn mark_under_review(&mut self) {
+        self.status = RentalStatus::UnderReview;
         self.updated_at = ic_cdk::api::time();
     }
 

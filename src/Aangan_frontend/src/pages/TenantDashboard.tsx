@@ -34,6 +34,7 @@ import { toast } from 'sonner';
 const TenantDashboard = () => {
   const { user, actor, updateProfile } = useICP();
   const [rentals, setRentals] = useState<any[]>([]);
+  const [approvedRentals, setApprovedRentals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -45,6 +46,7 @@ const TenantDashboard = () => {
   useEffect(() => {
     if (actor) {
       fetchTenantRentals();
+      fetchApprovedRentals();
     }
   }, [actor]);
 
@@ -62,6 +64,24 @@ const TenantDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchApprovedRentals = async () => {
+    if (!actor) return;
+
+    try {
+      const rentalService = new RentalService(actor);
+      const approved = await rentalService.getApprovedRentals();
+      setApprovedRentals(approved);
+    } catch (error) {
+      console.error('Error fetching approved rentals:', error);
+      // Don't show error toast as the method might not exist yet
+    }
+  };
+
+  const handleProceedToAgreement = (rental: any) => {
+    // Navigate to rental agreement page for approved rental
+    window.location.href = `/rental-agreement/${rental.property_id}?rental_id=${rental.id}`;
   };
 
   const handleProfileUpdate = async () => {
@@ -94,6 +114,40 @@ const TenantDashboard = () => {
 
   const activeRentals = rentals.filter(rental => rental.status === 'Active');
   const completedRentals = rentals.filter(rental => rental.status === 'Completed');
+  const pendingRentals = rentals.filter(rental => 
+    rental.status === 'Requested' || 
+    rental.status === 'UnderReview' || 
+    rental.status === 'Rejected'
+  );
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Requested':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+          <Clock className="w-3 h-3 mr-1" />
+          Request Pending
+        </Badge>;
+      case 'UnderReview':
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+          <Eye className="w-3 h-3 mr-1" />
+          Under Review
+        </Badge>;
+      case 'Rejected':
+        return <Badge className="bg-red-100 text-red-800 border-red-200">
+          <AlertCircle className="w-3 h-3 mr-1" />
+          Request Rejected
+        </Badge>;
+      case 'Approved':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Approved
+        </Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+          {status}
+        </Badge>;
+    }
+  };
 
   if (loading) {
     return (
@@ -264,6 +318,135 @@ const TenantDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Pending Rental Requests */}
+        {pendingRentals.length > 0 ? (
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-6">
+              Pending Requests
+            </h2>
+            <div className="space-y-6">
+              {pendingRentals.map((rental) => (
+                <Card key={rental.id} className="card-futuristic border-yellow-200 bg-gradient-to-r from-white to-yellow-50/30 hover-glow">
+                  <CardContent className="p-8">
+                    <div className="grid md:grid-cols-4 gap-8 items-center">
+                      <div className="md:col-span-2">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                            <Clock className="w-8 h-8 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-1">{rental.property_title}</h3>
+                            <div className="flex items-center text-gray-600 mb-2">
+                              <MapPin className="w-4 h-4 mr-1 text-yellow-500" />
+                              <span className="text-sm">{rental.property_address}</span>
+                            </div>
+                            {getStatusBadge(rental.status)}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-600 mb-1">Monthly Rent</p>
+                        <p className="text-2xl font-bold text-yellow-600">
+                          ₹{rental.rent_amount?.toLocaleString('en-IN')}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Period: {formatDate(rental.start_date)} - {formatDate(rental.end_date)}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col space-y-3">
+                        {rental.status === 'Rejected' ? (
+                          <Button 
+                            onClick={() => window.location.href = '/marketplace'}
+                            variant="outline" 
+                            className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                          >
+                            <Home className="w-4 h-4 mr-2" />
+                            Browse Other Properties
+                          </Button>
+                        ) : (
+                          <>
+                            <Button disabled className="bg-gray-300 text-gray-500 cursor-not-allowed">
+                              <Clock className="w-4 h-4 mr-2" />
+                              Waiting for Approval
+                            </Button>
+                          </>
+                        )}
+                        <Button variant="outline" className="border-yellow-200 text-yellow-600 hover:bg-yellow-50">
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Approved Rentals - Ready to Sign */}
+        {approvedRentals.length > 0 ? (
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent mb-6">
+              Approved Rentals - Ready to Sign
+            </h2>
+            <div className="space-y-6">
+              {approvedRentals.map((rental) => (
+                <Card key={rental.id} className="card-futuristic border-green-200 bg-gradient-to-r from-white to-green-50/30 hover-glow">
+                  <CardContent className="p-8">
+                    <div className="grid md:grid-cols-4 gap-8 items-center">
+                      <div className="md:col-span-2">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                            <CheckCircle className="w-8 h-8 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-1">{rental.property_title}</h3>
+                            <div className="flex items-center text-gray-600 mb-2">
+                              <MapPin className="w-4 h-4 mr-1 text-green-500" />
+                              <span className="text-sm">{rental.property_address}</span>
+                            </div>
+                            <Badge className="bg-green-100 text-green-800 border-green-200">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Approved by Landlord
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-600 mb-1">Monthly Rent</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          ₹{rental.rent_amount?.toLocaleString('en-IN')}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Period: {formatDate(rental.start_date)} - {formatDate(rental.end_date)}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col space-y-3">
+                        <Button 
+                          onClick={() => handleProceedToAgreement(rental)}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Proceed to Agreement
+                        </Button>
+                        <Button variant="outline" className="border-green-200 text-green-600 hover:bg-green-50">
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {/* Active Rentals */}
         {activeRentals.length > 0 ? (

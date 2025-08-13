@@ -57,6 +57,35 @@ pub fn get_rental_by_property(property_id: u64) -> Option<RentalAgreement> {
     })
 }
 
+pub fn get_pending_rental_requests_by_landlord(landlord: &Principal) -> Vec<RentalAgreement> {
+    RENTALS.with(|rentals| {
+        rentals
+            .borrow()
+            .iter()
+            .filter(|(_, rental)| {
+                rental.landlord == *landlord && 
+                (rental.status == crate::types::RentalStatus::Requested || 
+                 rental.status == crate::types::RentalStatus::UnderReview)
+            })
+            .map(|(_, rental)| rental)
+            .collect()
+    })
+}
+
+pub fn get_approved_rentals_by_tenant(tenant: &Principal) -> Vec<RentalAgreement> {
+    RENTALS.with(|rentals| {
+        rentals
+            .borrow()
+            .iter()
+            .filter(|(_, rental)| {
+                rental.tenant == *tenant && 
+                rental.status == crate::types::RentalStatus::Approved
+            })
+            .map(|(_, rental)| rental)
+            .collect()
+    })
+}
+
 pub fn create_nft(nft: NFTMetadata) -> Result<(), String> {
     NFTS.with(|nfts| {
         let mut nfts = nfts.borrow_mut();
