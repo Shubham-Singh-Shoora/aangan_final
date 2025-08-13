@@ -10,6 +10,7 @@ import { useICP } from '@/contexts/ICPContext';
 import { PropertyService } from '@/services/PropertyService';
 import { RentalService } from '@/services/RentalService';
 import RentalRequestCard from '@/components/RentalRequestCard';
+import PlugWallet from '@/components/PlugWallet';
 import {
   Home,
   User,
@@ -127,7 +128,8 @@ const LandlordDashboard = () => {
   const handleViewTenant = (tenantId: string) => {
     // For now, just show a toast with tenant ID
     // In a full implementation, this would open a tenant profile modal
-    toast.info(`Viewing tenant profile: ${tenantId.slice(0, 10)}...`);
+    const displayId = tenantId && typeof tenantId === 'string' ? tenantId.slice(0, 10) : 'Unknown';
+    toast.info(`Viewing tenant profile: ${displayId}...`);
   };
 
   const handleProfileUpdate = async () => {
@@ -176,6 +178,10 @@ const LandlordDashboard = () => {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Plug Wallet Integration */}
+        <div className="mb-8">
+          <PlugWallet />
+        </div>
         {/* Welcome Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
           <div className="flex items-center mb-4 lg:mb-0">

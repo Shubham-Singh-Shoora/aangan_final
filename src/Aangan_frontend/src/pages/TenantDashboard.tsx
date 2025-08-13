@@ -31,6 +31,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import PlugWallet from '@/components/PlugWallet';
+import ErrorBoundary from '@/components/ErrorBoundary';
+
 const TenantDashboard = () => {
   const { user, actor, updateProfile } = useICP();
   const [rentals, setRentals] = useState<any[]>([]);
@@ -122,9 +125,9 @@ const TenantDashboard = () => {
 
   const activeRentals = rentals.filter(rental => rental.status === 'Active');
   const completedRentals = rentals.filter(rental => rental.status === 'Completed');
-  const pendingRentals = rentals.filter(rental => 
-    rental.status === 'Requested' || 
-    rental.status === 'UnderReview' || 
+  const pendingRentals = rentals.filter(rental =>
+    rental.status === 'Requested' ||
+    rental.status === 'UnderReview' ||
     rental.status === 'Rejected'
   );
 
@@ -179,6 +182,12 @@ const TenantDashboard = () => {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Plug Wallet Integration */}
+        <div className="mb-8">
+          <ErrorBoundary>
+            <PlugWallet />
+          </ErrorBoundary>
+        </div>
         {/* Welcome Header */}
         <div className="mb-8 text-center md:text-left">
           <div className="flex items-center justify-center md:justify-start mb-4">
@@ -366,9 +375,9 @@ const TenantDashboard = () => {
 
                       <div className="flex flex-col space-y-3">
                         {rental.status === 'Rejected' ? (
-                          <Button 
+                          <Button
                             onClick={() => window.location.href = '/marketplace'}
-                            variant="outline" 
+                            variant="outline"
                             className="border-blue-300 text-blue-700 hover:bg-blue-50"
                           >
                             <Home className="w-4 h-4 mr-2" />
@@ -436,7 +445,7 @@ const TenantDashboard = () => {
                       </div>
 
                       <div className="flex flex-col space-y-3">
-                        <Button 
+                        <Button
                           onClick={() => handleProceedToAgreement(rental)}
                           className="bg-green-600 hover:bg-green-700 text-white"
                         >
