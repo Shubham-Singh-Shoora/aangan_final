@@ -1,61 +1,156 @@
-# `Aangan`
+# Aangan
 
-Welcome to your new `Aangan` project and to the Internet Computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
+Aangan is a decentralized web application built on the Internet Computer (IC) platform using the DFINITY SDK. It integrates secure backend canisters written in Motoko or Rust with a modern frontend framework to provide a scalable, fast, and secure decentralized app experience.
 
-To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
+---
 
-To learn more before you start working with `Aangan`, see the following documentation available online:
+## Overview
 
-- [Quick Start](https://internetcomputer.org/docs/current/developer-docs/setup/deploy-locally)
-- [SDK Developer Tools](https://internetcomputer.org/docs/current/developer-docs/setup/install)
-- [Rust Canister Development Guide](https://internetcomputer.org/docs/current/developer-docs/backend/rust/)
-- [ic-cdk](https://docs.rs/ic-cdk)
-- [ic-cdk-macros](https://docs.rs/ic-cdk-macros)
-- [Candid Introduction](https://internetcomputer.org/docs/current/developer-docs/backend/candid/)
+This project supports multiple branches, each potentially representing different features, fixes, or versions of the application in development. Branches allow development work to proceed in isolation without affecting the main or production version until changes are ready to be merged.
 
-If you want to start working on your project right away, you might want to try the following commands:
+---
 
-```bash
-cd Aangan/
-dfx help
-dfx canister --help
-```
+## Branches in this Repository
 
-## Running the project locally
+Branches in this repository serve to organize development and collaborative efforts. Here is an overview of typical branch types you may encounter or create:
 
-If you want to test your project locally, you can use the following commands:
+### How to View Branches
 
-```bash
-# Starts the replica, running in the background
+You can see all branches of this repository on GitHub by:
+
+1. Navigating to the repository main page.
+2. Clicking the branch dropdown near the top-left file navigation bar.
+3. Selecting **View all branches** to see a full list of branches including active and stale ones.
+
+This helps contributors choose the correct branch to work on or review.
+
+---
+
+## Features
+
+- Fully decentralized backend on Internet Computer using canisters
+- Responsive frontend with seamless integration
+- Secure identity and authentication with Internet Identity
+- Scalable design supporting multiple concurrent users
+- Modular branch-based development workflow
+
+---
+
+## Getting Started
+### Clone the Repository
+
+git clone https://github.com/Shubham-Singh-Shoora/aangan_final.git
+cd aangan_final
+
+### List All Branches Available
+
+git branch -a
+
+This command lists both local and remote branches so you can switch to the desired branch for development or review.
+
+### Switch to a Branch
+
+git checkout <branch_name>
+
+
+Replace `<branch_name>` with the name of the branch you want to work on.
+
+---
+
+## Installation
+
+- Install [DFX SDK](https://internetcomputer.org/docs/current/references/cli-reference/dfx-parent)
+- Install [Node.js](https://nodejs.org/) LTS and npm or yarn
+- Install Rust (if using Rust canisters)
+
+---
+
+## Running Locally
+
+1. Start local replica:
+
 dfx start --background
 
-# Deploys your canisters to the replica and generates your candid interface
+2. Deploy canisters:
+
 dfx deploy
-```
 
-Once the job completes, your application will be available at `http://localhost:4943?canisterId={asset_canister_id}`.
+3. Install frontend deps and run frontend server:
 
-If you have made changes to your backend canister, you can generate a new candid interface with
-
-```bash
-npm run generate
-```
-
-at any time. This is recommended before starting the frontend development server, and will be run automatically any time you run `dfx deploy`.
-
-If you are making frontend changes, you can start a development server with
-
-```bash
+cd frontend
+npm install
 npm start
-```
 
-Which will start a server at `http://localhost:8080`, proxying API requests to the replica at port 4943.
+The app will be available locally at `http://localhost:5173`.
 
-### Note on frontend environment variables
+---
 
-If you are hosting frontend code somewhere without using DFX, you may need to make one of the following adjustments to ensure your project does not fetch the root key in production:
+## Project Structure
 
-- set`DFX_NETWORK` to `ic` if you are using Webpack
-- use your own preferred method to replace `process.env.DFX_NETWORK` in the autogenerated declarations
-  - Setting `canisters -> {asset_canister_id} -> declarations -> env_override to a string` in `dfx.json` will replace `process.env.DFX_NETWORK` with the string in the autogenerated declarations
-- Write your own `createActor` constructor
+aangan_final/
+├── src/ # Backend canister source code
+│ ├── aangan_backend/ # Main backend logic (Motoko/Rust)
+│ └── ...
+├── frontend/ # Frontend React/Vite app
+├── dfx.json # IC project config
+├── package.json # NPM package dependencies
+└── README.md # This documentation
+
+
+---
+
+## Deploying to the Internet Computer Mainnet
+
+Make sure your cycles wallet is funded and `dfx.json` is configured correctly. Then deploy:
+
+dfx deploy --network ic
+
+
+---
+
+## Useful Git Commands for Branch Management
+
+| Command                    | Description                              |
+|----------------------------|----------------------------------------|
+| `git branch -a`            | List all local and remote branches     |
+| `git checkout <branch>`    | Switch to specified branch              |
+| `git pull`                 | Update current branch with remote changes |
+| `git merge <branch>`       | Merge specified branch into current branch |
+| `git push origin <branch>` | Push local branch changes to remote    |
+
+---
+
+## Environment Variables
+
+| Variable Name            | Description                              |
+|--------------------------|------------------------------------------|
+| `DFX_NETWORK`            | Target network, eg. `local` or `ic`      |
+| `REACT_APP_CANISTER_ID`  | Frontend canister ID for backend calls   |
+| `REACT_APP_II_URL`       | Internet Identity server URL              |
+
+---
+
+## Resources
+
+- [Internet Computer Docs](https://internetcomputer.org/docs/)
+- [Motoko Language Reference](https://internetcomputer.org/docs/current/references/motoko-ref)
+- [Rust Canister Development](https://internetcomputer.org/docs/current/references/rust-ref)
+- [GitHub Branch Management](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/viewing-branches-in-your-repository)
+
+---
+
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+## Author
+
+**Shubham Singh Shoora**  
+GitHub: [Shubham-Singh-Shoora](https://github.com/Shubham-Singh-Shoora)
+
+
+
+
+
