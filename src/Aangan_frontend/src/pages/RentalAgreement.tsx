@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,24 +19,47 @@ const RentalAgreement = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { actor, user } = useICP();
+  
+  // Early validation - if no ID or invalid ID, redirect immediately
+  useEffect(() => {
+    if (!id || id === 'undefined' || id === 'null') {
+      console.error('RentalAgreement: Invalid or missing property ID');
+      toast.error('No property specified');
+      navigate('/marketplace');
+      return;
+    }
+    
+    const propertyId = parseInt(id);
+    if (isNaN(propertyId) || !Number.isInteger(propertyId) || propertyId < 0) {
+      console.error('RentalAgreement: Invalid property ID format:', id);
+      toast.error('Invalid property ID');
+      navigate('/marketplace');
+      return;
+    }
+  }, [id, navigate]);
+
   const [agreed, setAgreed] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
   const [property, setProperty] = useState<any>(null);
   const [approvedRental, setApprovedRental] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchPropertyDetails();
-    checkApprovedRental();
-  }, [id, actor]);
-
-  const fetchPropertyDetails = async () => {
+  const fetchPropertyDetails = useCallback(async () => {
     if (!actor || !id) return;
+
+    // Validate the ID parameter
+    const propertyId = parseInt(id);
+    if (isNaN(propertyId) || !Number.isInteger(propertyId) || propertyId < 0) {
+      console.error('Invalid property ID:', id);
+      toast.error('Invalid property ID');
+      navigate('/marketplace');
+      return;
+    }
 
     try {
       setLoading(true);
       const propertyService = new PropertyService(actor);
-      const propertyData = await propertyService.getPropertyById(parseInt(id));
+      const propertyData = await propertyService.getPropertyById(propertyId);
       setProperty(propertyData);
     } catch (error) {
       console.error('Error fetching property:', error);
@@ -45,29 +68,80 @@ const RentalAgreement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [actor, id, navigate]);
 
-  const checkApprovedRental = async () => {
+  const checkApprovedRental = useCallback(async () => {
     if (!actor || !id) return;
 
     try {
       const rentalService = new RentalService(actor);
       const approvedRentals = await rentalService.getApprovedRentals();
       
+      console.log('Checking approved rentals for property ID:', id);
+      console.log('Available approved rentals:', approvedRentals);
+      
       // Check if there's an approved rental for this property
-      const rental = approvedRentals.find((r: any) => r.property_id === parseInt(id));
+      // Try both property_id and propertyId fields to be safe
+      const rental = approvedRentals.find((r: any) => {
+        const propertyId = r.propertyId || r.property_id;
+        const targetId = parseInt(id);
+        console.log('Comparing property ID:', propertyId, 'with target:', targetId);
+        return Number(propertyId) === targetId;
+      });
       
       if (rental) {
+        console.log('Found approved rental:', rental);
         setApprovedRental(rental);
       } else {
-        toast.error('No approved rental found for this property. Please get landlord approval first.');
+        console.log('No approved rental found for property ID:', id);
+        // Check if we can get rental ID from URL params instead
+        const urlParams = new URLSearchParams(location.search);
+        const rentalId = urlParams.get('rental_id');
+        
+        if (rentalId) {
+          console.log('Checking for approved rental by rental ID:', rentalId);
+          const rentalById = approvedRentals.find((r: any) => r.id === rentalId);
+          if (rentalById) {
+            console.log('Found approved rental by ID:', rentalById);
+            setApprovedRental(rentalById);
+            return;
+          }
+        }
+        
+        // No approved rental found, redirect to marketplace
+        toast.error('No approved rental found for this property. Please ensure your rental has been approved by the landlord.');
         navigate('/tenant-dashboard');
       }
     } catch (error) {
       console.error('Error checking approved rental:', error);
-      // Allow to proceed if service is not available yet
+      toast.error('Failed to verify rental approval');
     }
-  };
+  }, [actor, id, navigate, location.search]);
+
+  useEffect(() => {
+    // Only proceed if we have both actor and a valid ID
+    if (!actor || !id) {
+      console.log('RentalAgreement: Missing actor or ID:', { actor: !!actor, id });
+      if (!id) {
+        console.error('RentalAgreement: No property ID provided in URL');
+        toast.error('No property ID provided');
+        navigate('/marketplace');
+      }
+      return;
+    }
+
+    // Validate the ID parameter before calling any functions
+    const propertyId = parseInt(id);
+    if (isNaN(propertyId) || !Number.isInteger(propertyId) || propertyId < 0) {
+      console.error('RentalAgreement: Invalid property ID in URL:', id);
+      toast.error('Invalid property ID');
+      navigate('/marketplace');
+      return;
+    }
+
+    fetchPropertyDetails();
+    checkApprovedRental();
+  }, [id, actor, navigate, fetchPropertyDetails, checkApprovedRental]);
 
   if (loading) {
     return (
@@ -103,17 +177,56 @@ const RentalAgreement = () => {
     );
   }
 
+  // Helper function to safely convert dates
+  const safeConvertDate = (dateValue: string | number | bigint | undefined | null, fallbackDate: Date): string => {
+    try {
+      if (!dateValue) return fallbackDate.toISOString().split('T')[0];
+      
+      // Handle BigInt conversion
+      const numValue = typeof dateValue === 'bigint' ? Number(dateValue) : Number(dateValue);
+      
+      // Check if the number is valid
+      if (isNaN(numValue) || numValue <= 0) {
+        console.warn('Invalid date value, using fallback:', dateValue);
+        return fallbackDate.toISOString().split('T')[0];
+      }
+      
+      // Convert from nanoseconds to milliseconds (divide by 1,000,000)
+      const date = new Date(numValue / 1000000);
+      
+      // Validate the resulting date
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date after conversion, using fallback:', dateValue);
+        return fallbackDate.toISOString().split('T')[0];
+      }
+      
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      console.error('Error converting date:', error, 'Value:', dateValue);
+      return fallbackDate.toISOString().split('T')[0];
+    }
+  };
+
   const agreementData = {
     propertyTitle: property.title,
     propertyAddress: property.address,
     landlordName: 'Property Owner', // This should come from landlord's profile
     tenantName: user?.name || 'Current User',
-    monthlyRent: approvedRental ? Number(approvedRental.rent_amount) : Number(property.rent_amount),
-    securityDeposit: approvedRental ? Number(approvedRental.deposit_amount) : Number(property.deposit_amount),
-    leaseStartDate: approvedRental ? new Date(Number(approvedRental.start_date) / 1000000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    leaseEndDate: approvedRental ? new Date(Number(approvedRental.end_date) / 1000000).toISOString().split('T')[0] : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    monthlyRent: approvedRental ? 
+      (approvedRental.rent_amount ? Number(approvedRental.rent_amount) : Number(property.rent_amount || 0)) : 
+      Number(property.rent_amount || 0),
+    securityDeposit: approvedRental ? 
+      (approvedRental.deposit_amount ? Number(approvedRental.deposit_amount) : Number(property.deposit_amount || 0)) : 
+      Number(property.deposit_amount || 0),
+    leaseStartDate: approvedRental ? safeConvertDate(approvedRental.start_date, new Date()) : new Date().toISOString().split('T')[0],
+    leaseEndDate: approvedRental ? safeConvertDate(approvedRental.end_date, new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     agreementDate: new Date().toISOString().split('T')[0]
   };
+
+  // Debug logging for troubleshooting
+  console.log('Agreement data:', agreementData);
+  console.log('Approved rental data:', approvedRental);
+  console.log('Property data:', property);
 
   const handleConfirmAndMint = async () => {
     if (!agreed) {

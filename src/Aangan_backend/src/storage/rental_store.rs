@@ -25,28 +25,6 @@ pub fn update_rental(rental: RentalAgreement) -> Result<(), String> {
     })
 }
 
-pub fn get_rentals_by_tenant(tenant: &Principal) -> Vec<RentalAgreement> {
-    RENTALS.with(|rentals| {
-        rentals
-            .borrow()
-            .iter()
-            .filter(|(_, rental)| rental.tenant == *tenant)
-            .map(|(_, rental)| rental)
-            .collect()
-    })
-}
-
-pub fn get_rentals_by_landlord(landlord: &Principal) -> Vec<RentalAgreement> {
-    RENTALS.with(|rentals| {
-        rentals
-            .borrow()
-            .iter()
-            .filter(|(_, rental)| rental.landlord == *landlord)
-            .map(|(_, rental)| rental)
-            .collect()
-    })
-}
-
 pub fn get_rental_by_property(property_id: u64) -> Option<RentalAgreement> {
     RENTALS.with(|rentals| {
         rentals
@@ -81,6 +59,17 @@ pub fn get_approved_rentals_by_tenant(tenant: &Principal) -> Vec<RentalAgreement
                 rental.tenant == *tenant && 
                 rental.status == crate::types::RentalStatus::Approved
             })
+            .map(|(_, rental)| rental)
+            .collect()
+    })
+}
+
+pub fn get_rentals_by_user(user: &Principal) -> Vec<RentalAgreement> {
+    RENTALS.with(|rentals| {
+        rentals
+            .borrow()
+            .iter()
+            .filter(|(_, rental)| rental.tenant == *user || rental.landlord == *user)
             .map(|(_, rental)| rental)
             .collect()
     })

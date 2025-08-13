@@ -80,8 +80,16 @@ const TenantDashboard = () => {
   };
 
   const handleProceedToAgreement = (rental: any) => {
+    // Validate that we have a proper property ID before navigating
+    const propertyId = rental.propertyId || rental.property_id;
+    if (!propertyId || propertyId === 'undefined' || propertyId === 'null') {
+      console.error('Invalid property ID for rental:', rental);
+      toast.error('Cannot proceed: Invalid property information');
+      return;
+    }
+
     // Navigate to rental agreement page for approved rental
-    window.location.href = `/rental-agreement/${rental.property_id}?rental_id=${rental.id}`;
+    window.location.href = `/rental-agreement/${propertyId}?rental_id=${rental.id}`;
   };
 
   const handleProfileUpdate = async () => {
@@ -557,23 +565,23 @@ const TenantDashboard = () => {
           </div>
         ) : null}
 
-        {/* Empty State */}
-        {activeRentals.length === 0 && completedRentals.length === 0 && (
+        {/* Empty State - Show when user has no rentals at all */}
+        {rentals.length === 0 && approvedRentals.length === 0 && !loading && (
           <Card className="card-futuristic border-blue-200 text-center py-20 bg-gradient-to-br from-blue-50/50 to-white">
             <CardContent>
               <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-6 pulse-glow">
                 <Home className="w-10 h-10 text-blue-600" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">No Rentals Yet</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">Welcome to AANGAN!</h3>
               <p className="text-gray-600 mb-8 text-lg max-w-md mx-auto">
-                You haven't rented any properties yet. Start exploring our marketplace to find your perfect home.
+                You haven't started any rental requests yet. Browse our marketplace to find available properties and request rentals from landlords.
               </p>
               <Button
                 onClick={() => window.location.href = '/marketplace'}
                 className="btn-futuristic"
               >
                 <Home className="w-5 h-5 mr-2" />
-                Browse Properties
+                Browse Available Properties
               </Button>
             </CardContent>
           </Card>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -43,14 +43,7 @@ const LandlordDashboard = () => {
     phone: (user as any)?.phone || ''
   });
 
-  useEffect(() => {
-    if (actor) {
-      fetchLandlordProperties();
-      fetchRentalRequests();
-    }
-  }, [actor]);
-
-  const fetchLandlordProperties = async () => {
+  const fetchLandlordProperties = useCallback(async () => {
     if (!actor) return;
 
     try {
@@ -64,9 +57,9 @@ const LandlordDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [actor]);
 
-  const fetchRentalRequests = async () => {
+  const fetchRentalRequests = useCallback(async () => {
     if (!actor) return;
 
     try {
@@ -80,7 +73,14 @@ const LandlordDashboard = () => {
     } finally {
       setRequestsLoading(false);
     }
-  };
+  }, [actor]);
+
+  useEffect(() => {
+    if (actor) {
+      fetchLandlordProperties();
+      fetchRentalRequests();
+    }
+  }, [actor, fetchLandlordProperties, fetchRentalRequests]);
 
   const handleApproveRequest = async (requestId: string) => {
     if (!actor) return;

@@ -91,6 +91,15 @@ export class PropertyService {
 
     async getPropertyById(id: number) {
         try {
+            // Validate the ID before converting to BigInt
+            if (id === undefined || id === null) {
+                throw new Error(`Invalid property ID: ${id}. ID cannot be undefined or null.`);
+            }
+            
+            if (isNaN(id) || !Number.isInteger(id) || id < 0) {
+                throw new Error(`Invalid property ID: ${id}. ID must be a valid positive integer.`);
+            }
+            
             const result = await this.actor.get_property_by_id(BigInt(id));
             if ('Ok' in result) {
                 return result.Ok;

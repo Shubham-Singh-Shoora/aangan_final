@@ -62,7 +62,8 @@ export class RentalService {
     async getTenantRentals() {
         try {
             const rentals = await this.actor.get_my_rentals();
-            return rentals.map(formatRentalForDisplay);
+            // get_my_rentals returns Vec<RentalAgreement> directly, not wrapped in a Result
+            return Array.isArray(rentals) ? rentals.map(formatRentalForDisplay) : [];
         } catch (error) {
             console.error('Error fetching tenant rentals:', error);
             throw error;

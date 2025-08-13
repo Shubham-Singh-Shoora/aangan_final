@@ -47,11 +47,20 @@ const PropertyDetail = () => {
         return;
       }
 
+      // Validate the ID parameter
+      const propertyId = parseInt(id);
+      if (isNaN(propertyId) || !Number.isInteger(propertyId) || propertyId < 0) {
+        console.error('Invalid property ID:', id);
+        toast.error('Invalid property ID');
+        navigate('/marketplace');
+        return;
+      }
+
       try {
         setLoading(true);
-        console.log('Fetching property with id:', id);
+        console.log('Fetching property with id:', propertyId);
         const propertyService = new PropertyService(actor);
-        const propertyData = await propertyService.getPropertyById(parseInt(id));
+        const propertyData = await propertyService.getPropertyById(propertyId);
         console.log('Property data received:', propertyData);
         setProperty(propertyData);
       } catch (error) {

@@ -88,7 +88,7 @@ impl Storable for NFTMetadata {
     }
     
     const BOUND: ic_stable_structures::storable::Bound = ic_stable_structures::storable::Bound::Bounded {
-        max_size: 2048, // 2KB should be enough for NFT metadata including attributes
+        max_size: 65536, // 64KB for NFT metadata including base64 images and large text
         is_fixed_size: false,
     };
 }

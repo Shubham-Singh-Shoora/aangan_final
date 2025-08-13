@@ -98,6 +98,16 @@ pub fn confirm_rental(rental_id: u64) -> Result<RentalAgreement, String> {
     Ok(rental)
 }
 
+#[query]
+pub fn get_my_rentals() -> Vec<RentalAgreement> {
+    let caller = match auth::require_authenticated() {
+        Ok(caller) => caller,
+        Err(_) => return vec![], // Return empty vector if not authenticated
+    };
+
+    rental_store::get_rentals_by_user(&caller)
+}
+
 #[update]
 pub fn cancel_rental(rental_id: u64) -> Result<RentalAgreement, String> {
     let caller = auth::require_authenticated()?;
@@ -123,18 +133,6 @@ pub fn cancel_rental(rental_id: u64) -> Result<RentalAgreement, String> {
     }
 
     Ok(rental)
-}
-
-#[query]
-pub fn get_my_rentals() -> Result<Vec<RentalAgreement>, String> {
-    let caller = auth::require_authenticated()?;
-
-    let user = user_store::get_user(&caller).ok_or_else(|| "User not found".to_string())?;
-
-    match user.role {
-        Role::Tenant => Ok(rental_store::get_rentals_by_tenant(&caller)),
-        Role::Landlord => Ok(rental_store::get_rentals_by_landlord(&caller)),
-    }
 }
 
 #[query]

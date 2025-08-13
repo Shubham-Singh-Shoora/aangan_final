@@ -101,7 +101,7 @@ impl Storable for RentalAgreement {
     }
     
     const BOUND: ic_stable_structures::storable::Bound = ic_stable_structures::storable::Bound::Bounded {
-        max_size: 1024, // 1KB should be enough for rental agreement data
+        max_size: 4096, // 4KB for rental agreement data
         is_fixed_size: false,
     };
 }
